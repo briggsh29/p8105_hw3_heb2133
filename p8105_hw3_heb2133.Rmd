@@ -3,4 +3,77 @@ title: "Homework 3"
 output: github_document
 ---
 
-This is my work for homework 3. 
+Hannah Briggs (heb2133): This is my work for homework 3
+
+```{r}
+library(tidyverse)
+```
+
+## Problem 1
+
+Load Instacart dataset.
+
+```{r}
+library(p8105.datasets)
+data("instacart")
+```
+
+*structure, add more details* This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns. Obs are the level of items in orders by user. There are user/order variables -- user ID, order ID, order day, and order hour. There are also item variables -- name, aisle, department, and some numeric codes. 
+
+How many aisles are there, and which aisles are the most items ordered from?
+
+```{r}
+instacart %>% 
+  count(aisle) %>% 
+  arrange(desc(n))
+```
+
+*Answer*
+
+Make a plot showing number of items ordered in each aisle, limited to aisles with more than 10000 items ordered. Arrange the aisles sensibly and organize the plot so it's readable. 
+
+```{r}
+instacart %>% 
+  count(aisle) %>%
+  filter(n > 10000) %>% 
+  mutate(
+    aisle = factor(aisle),
+    aisle = fct_reorder(aisle, n)
+    #reorder aisle according to n
+  ) %>% 
+  ggplot(aes(x = aisle, y = n)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1))
+```
+
+Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+
+```{r}
+instacart %>% 
+  filter(aisle %in%  c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>% 
+  #Looking at these 3 aisles
+  group_by(aisle) %>% 
+  count(product_name) %>% 
+  mutate(rank = min_rank(desc(n))) %>% 
+  #Get a ranking for items ordered
+  filter(rank < 4) %>% 
+  #Get the 3 most popular items
+  arrange(aisle, rank) %>% 
+  knitr::kable()
+```
+
+Table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format table (2 x 7).
+
+```{r}
+instacart %>% 
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
+  group_by(product_name, order_dow) %>% 
+  summarize(mean_hour = mean(order_hour_of_day)) %>% 
+  #Go from long to wide format, untidy
+  pivot_wider(
+    names_from = order_dow, 
+    values_from = mean_hour
+  ) %>% 
+  knitr::kable()
+```
+
