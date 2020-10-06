@@ -77,3 +77,34 @@ instacart %>%
   knitr::kable()
 ```
 
+## Problem 2
+
+Load, tidy accelerometer dataset.
+
+```{r}
+
+```
+
+Q1:pivot longer - minute of the day, activity count; check if min of day is in numeric or other format, tweak var - useful var names
+
+Q2: group by day, summarize activ counts, make table easier to read, week number and day of week with activ counts. trends? more activ in one week than other? or days? Dow as column-alphabetical order by default, make sure it's in order you want.
+
+Q3: minute x axis, activ count y axis, geom_line, color = day of week, one panel
+
+## Problem 3
+
+Load NY NOAA dataset. 
+
+```{r}
+library(p8105.datasets)
+data("ny_noaa")
+```
+
+"reasonable units"-check in data descrip etc.
+snowfall - count, commonly obs values
+
+2panel plot - avg max temp; data manip step then plotting. jan and july (filter). organize data for avg max temp (group and summ), need ot grop by station, year, month, and summarize to get avg max temp. panels (facet, jan and july)
+
+q3: pair plots together - patchwork. 
+plot 1 - tmax/tmin, too much data for scatterplot, contout or bin or hex plot
+plot 2 - filter snowfall, distrib plot (ridge, violin, box = by year)
