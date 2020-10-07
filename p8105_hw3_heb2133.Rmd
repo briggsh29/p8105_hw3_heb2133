@@ -48,7 +48,7 @@ instacart %>%
 
 Table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”:
 
-```{r aisle plot}
+```{r}
 instacart %>% 
   filter(aisle %in%  c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>% 
   #Looking at these 3 aisles
@@ -84,13 +84,27 @@ Load and tidy accelerometer dataset:
 
 ```{r}
 accel_df = 
-  read.csv("./data/accel_data.csv") %>% 
+  read.csv("./data/accel_data.csv") %>%
   janitor::clean_names() %>% 
   pivot_longer(
-    activity_1:activity_140,
-    names_to = "activity_count",
-    values_to = "minute_of_day"
+    activity_1:activity_1440,
+    names_to = "minute",
+    names_prefix = "activity_",
+    values_to = "activity_count"
+  ) %>% 
+  mutate(
+    day = factor(day),
+    minute = as.numeric(minute),
+    weekday_weekend = recode(day, 
+                             "Monday" = "weekday",
+                             "Tuesday" = "weekday",
+                             "Wednesday" = "weekday",
+                             "Thursday" = "weekday",
+                             "Friday" = "weekday",
+                             "Saturday" = "weekend",
+                             "Sunday" = "weekend")
   )
+  
 ```
 
 
@@ -108,6 +122,17 @@ Load NY NOAA dataset.
 library(p8105.datasets)
 data("ny_noaa")
 ```
+
+Describe the dataset: The NY NOAA dataset is from the NOAA National Climatic Data Center, containing data from NY state weather stations from January 1981 to December 2010. There are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns in this dataset. Variables include - weather station ID, date, precipitation, snowfall and snow depth, and the max and min temperature.
+
+Data cleaning: 
+```{r}
+ny_noaa_clean = 
+  ny_noaa %>% 
+  separate(date, c("year", "month", "day")) 
+  
+```
+
 
 "reasonable units"-check in data descrip etc.
 snowfall - count, commonly obs values
