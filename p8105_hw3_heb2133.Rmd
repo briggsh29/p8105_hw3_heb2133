@@ -101,7 +101,7 @@ accel_df =
   mutate(
     day = factor(day),
     minute = as.numeric(minute),
-    weekday_weekend = recode(day, 
+    weekday_or_weekend = recode(day, 
                              "Monday" = "weekday",
                              "Tuesday" = "weekday",
                              "Wednesday" = "weekday",
@@ -109,16 +109,45 @@ accel_df =
                              "Friday" = "weekday",
                              "Saturday" = "weekend",
                              "Sunday" = "weekend")
-  )
+  ) %>% 
+  rename("day_of_observation" = "day_id")
   
 ```
 
+This dataset is generated from an accelerometer measuring the daily activity (i.e., activity measured for each minute of the day) of a 63 year-old male cardiac patient for a period of 5 weeks. Variables include week number (1-5), number of days into observation (1-35), day of the week, minute of the day, activity count, and whether observation is on a weekday or weekend. There are `r nrow(accel_df)` rows and `r ncol(accel_df)` columns in this dataset.
 
-Q1:pivot longer - minute of the day, activity count; check if min of day is in numeric or other format, tweak var - useful var names
+Trends of daily activity over five weeks:
 
-Q2: group by day, summarize activ counts, make table easier to read, week number and day of week with activ counts. trends? more activ in one week than other? or days? Dow as column-alphabetical order by default, make sure it's in order you want.
+```{r}
+accel_df %>% 
+  mutate(
+    day = factor(day),
+    day = forcats::fct_relevel(day, c("Sunday",
+                                       "Monday", 
+                                       "Tuesday", 
+                                       "Wednesday",
+                                       "Thursday",
+                                       "Friday",
+                                       "Saturday"))
+  ) %>% 
+  group_by(week, day) %>% 
+  summarize(daily_activity = sum(activity_count)) %>% 
+  knitr::kable()
+
+```
+
+Looking at this table we can observe potential trends in the patient's activity over the 5 weeks. The patient's activity on weekends seems to decline over time. For example: His daily activity counts in Week 1 for Saturday (376,254.0) and Sunday (631,105.0); compared to week 5 Saturday (1,440.0) and Sunday (138,421.0). His activity, on average, is lower in the last two weeks of observation, and was highest in the 2nd and 3rd weeks of observation. 
+
+Plot: Activty over 24-hours by day
+
+```{r}
+accel_df %>%
+  ggplot(aes(x = minute, y = activity_count, color = day)) + 
+  geom_smooth(se = FALSE)
+```
 
 Q3: minute x axis, activ count y axis, geom_line, color = day of week, one panel
+Describe in words any patterns or conclusions you can make based on this graph.
 
 ## Problem 3 
 
