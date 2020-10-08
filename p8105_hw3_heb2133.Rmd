@@ -39,7 +39,6 @@ instacart %>%
   mutate(
     aisle = factor(aisle),
     aisle = fct_reorder(aisle, n)
-    #reorder aisle according to n
   ) %>% 
   ggplot(aes(x = aisle, y = n)) +
   geom_point() +
@@ -51,7 +50,6 @@ Table showing the three most popular items in each of the aisles “baking ingre
 ```{r}
 instacart %>% 
   filter(aisle %in%  c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>% 
-  #Looking at these 3 aisles
   group_by(aisle) %>% 
   count(product_name) %>% 
   mutate(rank = min_rank(desc(n))) %>% 
@@ -66,13 +64,21 @@ Table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice 
 
 ```{r}
 instacart %>% 
-  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
   group_by(product_name, order_dow) %>% 
   summarize(mean_hour = mean(order_hour_of_day)) %>% 
-  #Go from long to wide format, untidy
   pivot_wider(
     names_from = order_dow, 
     values_from = mean_hour
+  ) %>% 
+  rename(
+    "sunday" = "0",
+    "monday" = "1",
+    "tuesday" = "2",
+    "wednesday" = "3",
+    "thursday" = "4",
+    "friday" = "5",
+    "saturday" = "6"
   ) %>% 
   knitr::kable()
 ```
@@ -123,18 +129,46 @@ library(p8105.datasets)
 data("ny_noaa")
 ```
 
-Describe the dataset: The NY NOAA dataset is from the NOAA National Climatic Data Center, containing data from NY state weather stations from January 1981 to December 2010. There are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns in this dataset. Variables include - weather station ID, date, precipitation, snowfall and snow depth, and the max and min temperature.
+Looking at missing data:
+```{r}
+ny_noaa %>% count(snow = is.na(snow))
+ny_noaa %>% count(prcp = is.na(prcp))
+ny_noaa %>% count(snwd = is.na(snwd))
+ny_noaa %>% count(tmax = is.na(tmax)) 
+ny_noaa %>% count(tmin = is.na(tmin))
+```
+
+This dataset is from the NOAA National Climatic Data Center, containing data from NY state weather stations from January 1981 to December 2010. There are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns in this dataset. Variables include, weather station ID, date, precipitation, snowfall and snow depth, and the max and min temperature.
+
+The dataset is missing data for key variables to the following degree (number observations = na):
+Snowfall (381,221), Snowdepth (591,786), Precipitation (145,838), Tmin (1,134,420), and Tmax (1,460,756).
 
 Data cleaning: 
 ```{r}
 ny_noaa_clean = 
   ny_noaa %>% 
-  separate(date, c("year", "month", "day")) 
-  
+  separate(date, c("year", "month", "day")) %>% 
+  mutate(year = as.numeric(year), 
+         day = as.numeric(day),
+         month = recode(month, 
+                        "1" = "january", 
+                        "2" = "february",
+                        "3" = "march",
+                        "4" = "april",
+                        "5" = "may",
+                        "6" = "june",
+                        "7" = "july",
+                        "8" = "august",
+                        "9" = "september",
+                        "10" = "october",
+                        "11" = "november",
+                        "12" = "december")
+         )
 ```
 
 
 "reasonable units"-check in data descrip etc.
+
 snowfall - count, commonly obs values
 
 2panel plot - avg max temp; data manip step then plotting. jan and july (filter). organize data for avg max temp (group and summ), need ot grop by station, year, month, and summarize to get avg max temp. panels (facet, jan and july)
