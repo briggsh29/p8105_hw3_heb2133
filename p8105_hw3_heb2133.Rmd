@@ -7,6 +7,12 @@ Hannah Briggs (heb2133)
 
 ```{r}
 library(tidyverse)
+
+knitr::opts_chunk$set(
+  fig.width = 6, 
+  fig.asp = 0.6,
+  out.width = "90%"
+)
 ```
 
 ## Problem 1
@@ -211,17 +217,26 @@ accel_week5 =
   ) %>% 
   filter(week == 5)
 
+#Creating complete plot for all 5 weeks
 ggplot(data = accel_week1,
-  aes(x = minute, y = activity_count, color = day)) + 
-  geom_smooth(se = FALSE) +
+  aes(x = minute, y = activity_count, color = day)) +
+  geom_smooth(se = FALSE) + 
   geom_smooth(data = accel_week2, se = FALSE) +
   geom_smooth(data = accel_week3, se = FALSE) +
-  geom_smooth(data = accel_week4, se = FALSE) + 
-  geom_smooth(data = accel_week5, se = FALSE) + 
+  geom_smooth(data = accel_week4, se = FALSE) +
+  geom_smooth(data = accel_week5, se = FALSE) +
   viridis::scale_color_viridis(
     name = "day",
     discrete = TRUE
-  )
+    ) +
+  labs(
+    title = "24-hour Activity for 35 days of Observation", 
+    y = "Activity Count",
+    x = "Minute of Day (min)"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5, size = 11),
+        axis.title = element_text(size = 10)
+        )
 ```
 
 From this plot we can see that daily activity tends to peak roughly around 600-650 minutes, and minute 1250 of the day. This equates to activity peaks around roughly 10am, and 9pm. Meaning that in the early/late afternoon, the patient tends to be less active and relatively sedentary compared to the rest of the daytime. 
@@ -237,19 +252,25 @@ data("ny_noaa")
 
 Looking at missing data:
 ```{r}
-ny_noaa %>% count(snow = is.na(snow))
+ny_noaa %>% count(prcp = is.na(snow))
 ny_noaa %>% count(prcp = is.na(prcp))
 ny_noaa %>% count(snwd = is.na(snwd))
 ny_noaa %>% count(tmax = is.na(tmax)) 
 ny_noaa %>% count(tmin = is.na(tmin))
+
 ```
 
-This dataset is from the NOAA National Climatic Data Center, containing data from NY state weather stations from January 1981 to December 2010. There are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns in this dataset. Variables include, weather station ID, date, precipitation, snowfall and snow depth, and the max and min temperature.
+This dataset is from the NOAA National Climatic Data Center, containing data from NY state weather stations from January 1981 to December 2010. There are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns in this dataset. Variables include, weather station ID, date, precipitation, snowfall and snow depth, and the max and min temperature. There are `r nrow(distinct(ny_noaa, id))` distinct weather stations in this dataset. 
 
-The dataset is missing data for key variables to the following degree (number observations = na):
-Snowfall (381,221), Snowdepth (591,786), Precipitation (145,838), Tmin (1,134,420), and Tmax (1,460,756).
+The dataset is missing data for key variables to a fair extent (number observations = na):
+ - Snowfall (381,221)
+ - Snowdepth (591,786)
+ - Precipitation (145,838)
+ - Tmin (1,134,420)
+ - Tmax (1,460,756).
 
-Data cleaning: 
+Tidying NYC NOAA dataset:
+
 ```{r}
 ny_noaa_clean = 
   ny_noaa %>% 
@@ -257,28 +278,99 @@ ny_noaa_clean =
   mutate(year = as.numeric(year), 
          day = as.numeric(day),
          month = recode(month, 
-                        "1" = "january", 
-                        "2" = "february",
-                        "3" = "march",
-                        "4" = "april",
-                        "5" = "may",
-                        "6" = "june",
-                        "7" = "july",
-                        "8" = "august",
-                        "9" = "september",
+                        "01" = "january", 
+                        "02" = "february",
+                        "03" = "march",
+                        "04" = "april",
+                        "05" = "may",
+                        "06" = "june",
+                        "07" = "july",
+                        "08" = "august",
+                        "09" = "september",
                         "10" = "october",
                         "11" = "november",
                         "12" = "december")
-         )
+         ) %>% 
+  #Converting tmin, tmax, and precipitation to reasonable units
+  mutate(
+    tmin = as.numeric(tmin),
+    tmin = tmin/10,
+    tmax = as.numeric(tmax),
+    tmax = tmax/10,
+    prcp = prcp/10
+  ) 
+```
+
+Most commonly observed values for snowfall: 
+
+```{r}
+ny_noaa_clean %>%
+  count(snow) %>% 
+  arrange(desc(n))
+```
+
+The five most commonly observed values for snowfall are (obs = observations): 0 mm (2,008,508 obs), NA i.e., missing (381,221), 25 mm (31,022 obs), 13mm (23,095 obs), and 51mm (18,274 obs).
+
+Plot average max temperature in January and July for each station across the years
+
+```{r}
+ny_noaa_clean %>% 
+  filter(month %in% c("january", "july")) %>%
+  na.omit(tmax) %>% 
+  group_by(id, year, month) %>% 
+  summarize(
+    avg_tmax = mean(tmax)
+    ) %>% 
+  ggplot(aes(x = year, y = avg_tmax, color = id)) + 
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = FALSE, color = "black") +
+  facet_grid(. ~ month) + 
+  labs(
+    title = "Avg Max Temp from NY Weather Stations during January vs July across Years", 
+    y = "Avg Max Temperature (C)",
+    x = "Year",
+    caption = "Observations colored by 747 weather stations; legend not shown"
+    ) + 
+  theme(panel.spacing = unit(1.2, "lines"), 
+        plot.title = element_text(hjust = 0.5, size = 12),
+        axis.title = element_text(size = 11), 
+        legend.position = "none"
+        )
 ```
 
 
-"reasonable units"-check in data descrip etc.
+Two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) the distribution of snowfall values >0 and <100 by year
 
-snowfall - count, commonly obs values
+```{r}
+#Making tmin vs tmax plot i)
+temp_plot = 
+  ny_noaa_clean %>% 
+  na.omit(tmin, tmax) %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_bin2d() +
+  labs(
+    title = "Min versus Max Temp from NY Weather Stations",
+    x = "Min Temp (C)",
+    y = "Max Temp (C)"
+  ) +
+  theme(panel.spacing = unit(1.2, "lines"), 
+        plot.title = element_text(hjust = 0.5, size = 11),
+        axis.title = element_text(size = 10),
+        )
 
-2panel plot - avg max temp; data manip step then plotting. jan and july (filter). organize data for avg max temp (group and summ), need ot grop by station, year, month, and summarize to get avg max temp. panels (facet, jan and july)
-
-q3: pair plots together - patchwork. 
-plot 1 - tmax/tmin, too much data for scatterplot, contout or bin or hex plot
-plot 2 - filter snowfall, distrib plot (ridge, violin, box = by year)
+#Making snowfall plot ii)
+snowfall_plot = 
+  ny_noaa_clean %>% 
+  filter(snow > 0, snow < 100) %>% 
+  ggplot(aes(x = year, y = snow, color = year)) + 
+  geom_boxplot(aes(group = year)) +
+  labs(
+    title = "Reports of Snowfall from NY Weather Stations by Year",
+    y = "Snowfall (mm)",
+    x = "Year"
+  ) + 
+  theme(plot.title = element_text(hjust = 0.5, size = 11),
+        axis.title = element_text(size = 10),
+        legend.position = "none"
+        )
+```
