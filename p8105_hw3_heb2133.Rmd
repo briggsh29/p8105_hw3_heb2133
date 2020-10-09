@@ -138,16 +138,93 @@ accel_df %>%
 
 Looking at this table we can observe potential trends in the patient's activity over the 5 weeks. The patient's activity on weekends seems to decline over time. For example: His daily activity counts in Week 1 for Saturday (376,254.0) and Sunday (631,105.0); compared to week 5 Saturday (1,440.0) and Sunday (138,421.0). His activity, on average, is lower in the last two weeks of observation, and was highest in the 2nd and 3rd weeks of observation. 
 
-Plot: Activty over 24-hours by day
+Plot of 24-hour activity for all 35 days of observation:
 
 ```{r}
-accel_df %>%
-  ggplot(aes(x = minute, y = activity_count, color = day)) + 
-  geom_smooth(se = FALSE)
+accel_week1 =
+  accel_df %>% 
+    mutate(
+    day = factor(day),
+    day = forcats::fct_relevel(day, c("Sunday",
+                                       "Monday", 
+                                       "Tuesday", 
+                                       "Wednesday",
+                                       "Thursday",
+                                       "Friday",
+                                       "Saturday"))
+  ) %>% 
+  filter(week == 1)
+
+accel_week2 = 
+  accel_df %>% 
+    mutate(
+    day = factor(day),
+    day = forcats::fct_relevel(day, c("Sunday",
+                                       "Monday", 
+                                       "Tuesday", 
+                                       "Wednesday",
+                                       "Thursday",
+                                       "Friday",
+                                       "Saturday"))
+  ) %>% 
+  filter(week == 2)
+
+accel_week3 = 
+  accel_df %>% 
+    mutate(
+    day = factor(day),
+    day = forcats::fct_relevel(day, c("Sunday",
+                                       "Monday", 
+                                       "Tuesday", 
+                                       "Wednesday",
+                                       "Thursday",
+                                       "Friday",
+                                       "Saturday"))
+  ) %>% 
+  filter(week == 3)
+
+accel_week4 = 
+  accel_df %>% 
+    mutate(
+    day = factor(day),
+    day = forcats::fct_relevel(day, c("Sunday",
+                                       "Monday", 
+                                       "Tuesday", 
+                                       "Wednesday",
+                                       "Thursday",
+                                       "Friday",
+                                       "Saturday"))
+  ) %>% 
+  filter(week == 4)
+
+accel_week5 = 
+  accel_df %>%
+    mutate(
+    day = factor(day),
+    day = forcats::fct_relevel(day, c("Sunday",
+                                       "Monday", 
+                                       "Tuesday", 
+                                       "Wednesday",
+                                       "Thursday",
+                                       "Friday",
+                                       "Saturday"))
+  ) %>% 
+  filter(week == 5)
+
+ggplot(data = accel_week1,
+  aes(x = minute, y = activity_count, color = day)) + 
+  geom_smooth(se = FALSE) +
+  geom_smooth(data = accel_week2, se = FALSE) +
+  geom_smooth(data = accel_week3, se = FALSE) +
+  geom_smooth(data = accel_week4, se = FALSE) + 
+  geom_smooth(data = accel_week5, se = FALSE) + 
+  viridis::scale_color_viridis(
+    name = "day",
+    discrete = TRUE
+  )
 ```
 
-Q3: minute x axis, activ count y axis, geom_line, color = day of week, one panel
-Describe in words any patterns or conclusions you can make based on this graph.
+From this plot we can see that daily activity tends to peak roughly around 600-650 minutes, and minute 1250 of the day. This equates to activity peaks around roughly 10am, and 9pm. Meaning that in the early/late afternoon, the patient tends to be less active and relatively sedentary compared to the rest of the daytime. 
 
 ## Problem 3 
 
