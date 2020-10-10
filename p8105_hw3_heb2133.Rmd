@@ -8,6 +8,8 @@ Hannah Briggs (heb2133)
 ```{r}
 library(tidyverse)
 
+library(patchwork)
+
 knitr::opts_chunk$set(
   fig.width = 6, 
   fig.asp = 0.6,
@@ -48,7 +50,16 @@ instacart %>%
   ) %>% 
   ggplot(aes(x = aisle, y = n)) +
   geom_point() +
-  theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1))
+  labs(
+    title = "Number of Items Ordered by Aisles",
+    y = "Number of items",
+    capion = "Only shows aisles with over 1000 items ordered"
+  )
+  theme(
+    axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1), 
+    plot.title = element_text(hjust = 0.5, size = 11),
+    axis.title = element_text(size = 10),
+  )
 ```
 
 Table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”:
@@ -252,22 +263,12 @@ data("ny_noaa")
 
 Looking at missing data:
 ```{r}
-ny_noaa %>% count(prcp = is.na(snow))
-ny_noaa %>% count(prcp = is.na(prcp))
-ny_noaa %>% count(snwd = is.na(snwd))
-ny_noaa %>% count(tmax = is.na(tmax)) 
-ny_noaa %>% count(tmin = is.na(tmin))
-
+colSums(is.na(ny_noaa))
 ```
 
 This dataset is from the NOAA National Climatic Data Center, containing data from NY state weather stations from January 1981 to December 2010. There are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns in this dataset. Variables include, weather station ID, date, precipitation, snowfall and snow depth, and the max and min temperature. There are `r nrow(distinct(ny_noaa, id))` distinct weather stations in this dataset. 
 
-The dataset is missing data for key variables to a fair extent (number observations = na):
- - Snowfall (381,221)
- - Snowdepth (591,786)
- - Precipitation (145,838)
- - Tmin (1,134,420)
- - Tmax (1,460,756).
+The dataset is missing data for key variables to a fair extent (number observations = na): snowfall (381,221), snowdepth (591,786), precipitation (145,838), tmin (1,134,420), and tmax (1,460,756).
 
 Tidying NYC NOAA dataset:
 
@@ -309,7 +310,7 @@ ny_noaa_clean %>%
   arrange(desc(n))
 ```
 
-The five most commonly observed values for snowfall are (obs = observations): 0 mm (2,008,508 obs), NA i.e., missing (381,221), 25 mm (31,022 obs), 13mm (23,095 obs), and 51mm (18,274 obs).
+The five most commonly observed values for snowfall are (obs = observations): 0 mm (2,008,508 obs), NA i.e., missing (381,221), 25 mm (31,022 obs), 13mm (23,095 obs), and 51mm (18,274 obs). The most commonly observed value for snow is 0mm and this makes sense because this data is collected year round, and for most of the year, NY does not have snow. 
 
 Plot average max temperature in January and July for each station across the years
 
@@ -338,44 +339,53 @@ ny_noaa_clean %>%
         )
 ```
 
+This pot demonstrates that on average the max temp is higher during the month of July. Over the years, the max temp during July looks relatively stabe. The max temp during January seems to be more varied across the years. There are some outliers in these graphs from reports from weather stations.
 
-Two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) the distribution of snowfall values >0 and <100 by year
+Two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) the distribution of snowfall values >0 and <100 by year.
+
+Making the temperature plot:
 
 ```{r}
-library(patchwork)
-
-#Making tmin vs tmax plot i)
 temp_plot = 
   ny_noaa_clean %>% 
   na.omit(tmin, tmax) %>% 
-  ggplot(aes(x = tmin, y = tmax)) +
-  geom_bin2d() +
-  labs(
-    title = "Min versus Max Temp from NY Weather Stations",
-    x = "Min Temp (C)",
-    y = "Max Temp (C)"
-  ) +
-  theme(panel.spacing = unit(1.2, "lines"), 
-        plot.title = element_text(hjust = 0.5, size = 11),
-        axis.title = element_text(size = 10),
-        )
+  pivot_longer(
+    tmin:tmax, 
+    names_to = "tmin_vs_tmax",
+    values_to = "temperature"
+  ) %>% 
+  ggplot(aes(x = temperature, fill = tmin_vs_tmax)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "Min versus Max Temp in NY",
+       x = "Temperature (C)") + 
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 11),
+    axis.title = element_text(size = 10),
+    legend.title = element_text(size = 10)
+  )
+```
 
-#Making snowfall plot ii)
+Making snowfall plot:
+
+```{r}
 snowfall_plot = 
   ny_noaa_clean %>% 
   filter(snow > 0, snow < 100) %>% 
-  ggplot(aes(x = year, y = snow, color = year)) + 
+  ggplot(aes(x = year, y = snow, color = year)) +
   geom_boxplot(aes(group = year)) +
   labs(
     title = "Reports of Snowfall from NY Weather Stations by Year",
-    y = "Snowfall (mm)",
-    x = "Year"
+    y = "Snowfall (mm)"
   ) + 
-  theme(plot.title = element_text(hjust = 0.5, size = 11),
-        axis.title = element_text(size = 10),
-        legend.position = "none",
-  )
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 11),
+    axis.title = element_text(size = 10),
+    legend.position = "none"
+        )
+```
 
-#Patch the graphs
+Patching our temperature and snowfall plots together:
+
+```{r}
 temp_plot / snowfall_plot
 ```
