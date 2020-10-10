@@ -342,6 +342,8 @@ ny_noaa_clean %>%
 Two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) the distribution of snowfall values >0 and <100 by year
 
 ```{r}
+library(patchwork)
+
 #Making tmin vs tmax plot i)
 temp_plot = 
   ny_noaa_clean %>% 
@@ -371,6 +373,9 @@ snowfall_plot =
   ) + 
   theme(plot.title = element_text(hjust = 0.5, size = 11),
         axis.title = element_text(size = 10),
-        legend.position = "none"
-        )
+        legend.position = "none",
+  )
+
+#Patch the graphs
+temp_plot / snowfall_plot
 ```
