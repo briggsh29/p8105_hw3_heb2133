@@ -13,7 +13,7 @@ library(patchwork)
 knitr::opts_chunk$set(
   fig.width = 6, 
   fig.asp = 0.6,
-  out.width = "90%"
+  out.width = "95%"
 )
 ```
 
@@ -52,11 +52,10 @@ instacart %>%
   geom_point() +
   labs(
     title = "Number of Items Ordered by Aisles",
-    y = "Number of items",
-    capion = "Only shows aisles with over 1000 items ordered"
-  )
+    y = "Number of items"
+  ) +
   theme(
-    axis.text.x = element_text(angle = 270, vjust = 0.5, hjust = 1), 
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), 
     plot.title = element_text(hjust = 0.5, size = 11),
     axis.title = element_text(size = 10),
   )
@@ -339,7 +338,7 @@ ny_noaa_clean %>%
         )
 ```
 
-This pot demonstrates that on average the max temp is higher during the month of July. Over the years, the max temp during July looks relatively stabe. The max temp during January seems to be more varied across the years. There are some outliers in these graphs from reports from weather stations.
+This plot demonstrates that on average the max temp is higher during the month of July. Over the years, the max temp during July looks relatively stabe. The max temp during January seems to be more varied across the years. There are some outliers in these graphs from reports from weather stations.
 
 Two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) the distribution of snowfall values >0 and <100 by year.
 
